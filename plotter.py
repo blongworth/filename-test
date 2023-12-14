@@ -14,7 +14,7 @@ try:
             y, x = map(int, line.split(','))  # Assuming x and y are ints
             x_data.append(x)
             y_data.append(y)
-            plt.scatter(x, y)
+            plt.scatter(x, y, c='blue')
             plt.pause(0.1)
 except KeyboardInterrupt:
     ser.close()
