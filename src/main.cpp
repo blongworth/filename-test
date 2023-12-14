@@ -8,12 +8,14 @@ const int WRITE_DELAY = 0; //delay between writes in ms
 char FileName[100];
 void newFilename(char *FileName1);
 void writeFile(char *FileName1);
+int countFiles();
+
 time_t getTeensy3Time();
 File myFile;
-
 elapsedMillis fileTimer;
 elapsedMillis writeTimer;
 int writePerSec = 0;
+int fileCount;
 
 void setup()
 {
@@ -34,6 +36,7 @@ void setup()
   }
   Serial.println("initialization done.");
 
+  fileCount = countFiles();
   // set the Time library to use Teensy's RTC to keep time
   setSyncProvider(getTeensy3Time);
   delay(100);
@@ -52,8 +55,10 @@ void loop()
     Serial.print("New FileName: ");
     Serial.println(FileName);
     Serial.println(writePerSec);
+    Serial.println(fileCount);
     writePerSec = 0;
     fileTimer = 0;
+    fileCount++;
   }
 
   if (writeTimer > WRITE_DELAY)
@@ -82,6 +87,34 @@ void writeFile(char *FileName1)
   else
   {
     Serial.println("error opening test.txt");
+  }
+}
+
+int countFiles() {
+  int fileCount = 0;
+  File root = SD.open("/");
+
+  if (root) {
+    while (true) {
+      File entry = root.openNextFile();
+
+      if (!entry) {
+        // No more files
+        break;
+      }
+
+      fileCount++;
+      entry.close();
+    }
+
+    root.close();
+
+    Serial.print("Number of files on SD card: ");
+    Serial.println(fileCount);
+    return fileCount;
+  } else {
+    Serial.println("Error opening root directory.");
+    return -1;
   }
 }
 
