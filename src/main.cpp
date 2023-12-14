@@ -2,6 +2,8 @@
 #include <TimeLib.h>
 #include <SD.h>
 
+//#define DEBUG //print only filecount,writePerSec if not defined
+
 const int FILE_DELAY = 1 * 1000; //new file timeout in ms
 const int WRITE_DELAY = 0; //delay between writes in ms
 
@@ -52,9 +54,12 @@ void loop()
   if (fileTimer >= FILE_DELAY)
   {
     newFilename(FileName);
+    #ifdef DEBUG
     Serial.print("New FileName: ");
     Serial.println(FileName);
-    Serial.println(writePerSec);
+    #endif
+    Serial.print(writePerSec);
+    Serial.print(',');
     Serial.println(fileCount);
     writePerSec = 0;
     fileTimer = 0;
@@ -72,8 +77,10 @@ void loop()
 void newFilename(char *FileName1)
 {
   sprintf(FileName1, "%02d_%02d_%02d_%02d_%02d_%02d.txt", year(), month(), day(), hour(), minute(), second());
+  #ifdef DEBUG
   Serial.print("New FileName1: ");
   Serial.println(FileName1);
+  #endif
 }
 
 void writeFile(char *FileName1)
@@ -86,7 +93,9 @@ void writeFile(char *FileName1)
   }
   else
   {
+    #ifdef DEBUG
     Serial.println("error opening test.txt");
+    #endif
   }
 }
 
