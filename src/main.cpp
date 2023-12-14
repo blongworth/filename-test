@@ -2,17 +2,28 @@
 #include <TimeLib.h>
 #include <SD.h>
 
+const int FILE_DELAY = 1 * 1000; //new file timeout in ms
+const int WRITE_DELAY = 0; //delay between writes in ms
+
 char FileName[100];
 void newFilename(char *FileName1);
 void writeFile(char *FileName1);
+time_t getTeensy3Time();
 File myFile;
 
 elapsedMillis fileTimer;
+elapsedMillis writeTimer;
+int writePerSec = 0;
 
 void setup()
 {
   Serial.begin(9600);
   while (!Serial);
+   // setup teensy crash reporting
+  if (CrashReport) {
+    Serial.print(CrashReport);
+    delay(5000);
+  }
   newFilename(FileName);
 
   Serial.print("Initializing SD card...");
@@ -22,19 +33,35 @@ void setup()
     while (1);
   }
   Serial.println("initialization done.");
+
+  // set the Time library to use Teensy's RTC to keep time
+  setSyncProvider(getTeensy3Time);
+  delay(100);
+  if (timeStatus()!= timeSet) {
+    Serial.println("Unable to sync with the RTC");
+  } else {
+    Serial.println("RTC has set the system time");
+  } 
 }
 
 void loop()
 {
-  if (fileTimer >= 1000)
+  if (fileTimer >= FILE_DELAY)
   {
     newFilename(FileName);
     Serial.print("New FileName: ");
     Serial.println(FileName);
+    Serial.println(writePerSec);
+    writePerSec = 0;
+    fileTimer = 0;
   }
 
-  writeFile(FileName);
-  delay(50);
+  if (writeTimer > WRITE_DELAY)
+  {
+    writeFile(FileName);
+    writeTimer = 0;
+    writePerSec++;
+  }
 }
 
 void newFilename(char *FileName1)
@@ -51,10 +78,14 @@ void writeFile(char *FileName1)
   {
     myFile.println("testing 1, 2, 3.");
     myFile.close();
-    Serial.println("done.");
   }
   else
   {
     Serial.println("error opening test.txt");
   }
+}
+
+time_t getTeensy3Time()
+{
+  return Teensy3Clock.get();
 }
